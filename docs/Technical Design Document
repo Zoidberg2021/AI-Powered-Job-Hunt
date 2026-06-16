@@ -1,0 +1,514 @@
+# Technical Design Document (TDD)
+
+## AI-Powered Job Hunt
+
+Version: 1.0
+Status: Design Phase
+
+---
+
+# 1. Purpose
+
+This document defines the technical architecture and implementation details for the AI-Powered Job Hunt platform.
+
+The objective of this document is to provide sufficient design information to implement the system with minimal ambiguity and minimal rework.
+
+---
+
+# 2. Technology Stack
+
+## Workflow Orchestration
+
+n8n
+
+Responsibilities:
+
+* Scheduling
+* API communication
+* Data transformation
+* Database operations
+* Notification delivery
+
+---
+
+## Database
+
+PostgreSQL
+
+Responsibilities:
+
+* Job persistence
+* User preference storage
+* State management
+* Historical tracking
+
+---
+
+## AI Evaluation
+
+Ollama
+
+Responsibilities:
+
+* Job evaluation
+* Scoring
+* Recommendation generation
+* Summarization
+
+---
+
+## Notifications
+
+Telegram Bot API
+
+Responsibilities:
+
+* Immediate notifications
+* Daily digest delivery
+* Status interaction (future)
+
+---
+
+## Hosting
+
+Environment:
+
+* Docker
+* CasaOS
+
+---
+
+# 3. System Architecture
+
+Remote OK API
+Indeed RSS
+Company RSS Feeds
+↓
+Job Collection
+↓
+Normalization
+↓
+Deduplication
+↓
+PostgreSQL
+↓
+AI Evaluation
+↓
+PostgreSQL
+↓
+Notifications
+↓
+Application Tracking
+
+---
+
+# 4. Data Flow
+
+Step 1
+Retrieve jobs from public sources.
+
+Step 2
+Normalize source-specific data into a standard format.
+
+Step 3
+Generate fingerprints and eliminate duplicates.
+
+Step 4
+Persist new jobs.
+
+Step 5
+Retrieve unscored jobs.
+
+Step 6
+Retrieve user preferences.
+
+Step 7
+Evaluate jobs using Ollama.
+
+Step 8
+Persist evaluation results.
+
+Step 9
+Generate notifications.
+
+Step 10
+Track application progress.
+
+---
+
+# 5. Database Design
+
+## Table: jobs
+
+Columns:
+
+id UUID PRIMARY KEY
+
+hash VARCHAR(64)
+
+title TEXT
+
+company TEXT
+
+location TEXT
+
+salary TEXT
+
+description TEXT
+
+url TEXT
+
+source TEXT
+
+date_posted TIMESTAMP
+
+date_found TIMESTAMP
+
+score INTEGER
+
+recommendation TEXT
+
+reasons JSONB
+
+red_flags JSONB
+
+role_categories JSONB
+
+ai_summary TEXT
+
+status TEXT
+
+notification_sent BOOLEAN
+
+date_applied TIMESTAMP
+
+notes TEXT
+
+created_at TIMESTAMP
+
+updated_at TIMESTAMP
+
+---
+
+## Table: user_profile
+
+Columns:
+
+id UUID PRIMARY KEY
+
+key TEXT
+
+value TEXT
+
+created_at TIMESTAMP
+
+updated_at TIMESTAMP
+
+---
+
+# 6. Standard Job Object
+
+Every job source shall be transformed into:
+
+{
+"title": "",
+"company": "",
+"location": "",
+"salary": "",
+"description": "",
+"url": "",
+"source": "",
+"date_posted": "",
+"date_found": ""
+}
+
+All downstream workflows shall operate only on this structure.
+
+---
+
+# 7. Deduplication Strategy
+
+Fingerprint:
+
+lower(company)
++
+lower(title)
++
+lower(location)
+
+Hash:
+
+md5(
+company +
+title +
+location
+)
+
+Process:
+
+Generate fingerprint
+↓
+Check database
+↓
+Exists?
+↓
+Yes → Ignore
+No → Insert
+
+---
+
+# 8. Workflow Definitions
+
+## Workflow 1
+
+Job Collection
+
+Trigger:
+Every 4 hours
+
+Responsibilities:
+
+* Retrieve jobs
+* Normalize data
+* Generate hashes
+* Prevent duplicates
+* Insert new jobs
+
+Failure Handling:
+
+API unavailable
+→ Log error
+→ Retry during next execution
+
+Database unavailable
+→ Log error
+→ Terminate execution
+
+---
+
+## Workflow 2
+
+AI Evaluation
+
+Trigger:
+Every 30 minutes
+
+Selection Criteria:
+
+score IS NULL
+AND status = 'New'
+
+Responsibilities:
+
+* Retrieve jobs
+* Retrieve user preferences
+* Build prompt
+* Submit prompt to Ollama
+* Parse JSON response
+* Update database
+
+Failure Handling:
+
+Ollama unavailable
+→ Log error
+→ Leave job unscored
+
+Invalid JSON
+→ Log error
+→ Leave job unscored
+
+---
+
+## Workflow 3
+
+Immediate Notifications
+
+Selection Criteria:
+
+score >= 90
+AND notification_sent = false
+
+Responsibilities:
+
+* Build Telegram message
+* Deliver message
+* Update notification status
+
+Failure Handling:
+
+Telegram unavailable
+→ Log error
+→ Retry next execution
+
+---
+
+## Workflow 4
+
+Daily Digest
+
+Trigger:
+7:00 PM
+
+Selection Criteria:
+
+80 <= score < 90
+
+Responsibilities:
+
+* Retrieve jobs
+* Build digest
+* Deliver Telegram message
+
+Failure Handling:
+
+Telegram unavailable
+→ Log error
+→ Retry next scheduled execution
+
+---
+
+## Workflow 5
+
+Application Tracking
+
+Responsibilities:
+
+* Update status
+* Record application dates
+* Store notes
+
+Supported Statuses:
+
+New
+Saved
+Applied
+Interviewing
+Rejected
+Closed
+Ignored
+
+---
+
+# 9. AI Evaluation Design
+
+Model:
+Locally hosted LLM through Ollama.
+
+Input:
+
+* Full job description
+* User preferences
+* Job metadata
+
+Output:
+
+{
+"score": 0,
+"recommendation": "",
+"reasons": [],
+"red_flags": [],
+"role_categories": [],
+"ai_summary": ""
+}
+
+The response shall be valid JSON.
+
+---
+
+# 10. Notification Formats
+
+Immediate Notification:
+
+Match Score
+Recommendation
+Title
+Company
+Location
+Reasons
+Red Flags
+Summary
+URL
+
+Daily Digest:
+
+Jobs Found
+Recommended Jobs
+Summary of Opportunities
+
+---
+
+# 11. Scheduling
+
+Job Collection:
+Every 4 hours
+
+AI Evaluation:
+Every 30 minutes
+
+Daily Digest:
+7:00 PM
+
+Notification Workflow:
+Every 15 minutes
+
+---
+
+# 12. Logging Strategy
+
+Log:
+
+Workflow execution start
+Workflow completion
+Job counts
+Duplicate counts
+Scoring failures
+API failures
+Database failures
+Notification failures
+
+Logs shall be retained for troubleshooting purposes.
+
+---
+
+# 13. Security Considerations
+
+The system shall:
+
+* Store secrets using n8n credentials
+* Avoid hardcoded tokens
+* Avoid hardcoded URLs
+* Avoid proprietary AI dependencies
+* Remain fully self-hosted
+
+---
+
+# 14. Assumptions and Constraints
+
+Assumptions:
+
+* PostgreSQL is operational
+* Ollama is operational
+* Telegram Bot API is configured
+* Public job sources remain accessible
+
+Constraints:
+
+* No paid services
+* No browser automation
+* No scraping dependencies
+* Minimal maintenance requirements
+* Self-hosted architecture only
+
+---
+
+# 15. Future Technical Enhancements
+
+* Additional job sources
+* Metabase dashboards
+* Resume generation
+* Cover letter generation
+* Feedback learning loop
+* Company research
+* Skill trend reporting
+* Application reminders
+* Interactive Telegram commands
