@@ -1,0 +1,470 @@
+# Functional Specification Document (FSD)
+
+## AI-Powered Job Hunt
+
+Version: 1.0
+Status: Design Phase
+
+---
+
+# 1. Project Overview
+
+## Project Name
+
+AI-Powered Job Hunt
+
+## Purpose
+
+AI-Powered Job Hunt is a self-hosted automation platform designed to automate job discovery, evaluate opportunities against user-defined career preferences, and provide actionable recommendations with minimal manual effort.
+
+The system combines workflow automation, AI-assisted evaluation, persistent storage, and notification services to create an intelligent job discovery and tracking platform.
+
+The project serves both as a practical personal productivity tool and a portfolio project demonstrating modern automation architecture and AI integration.
+
+---
+
+# 2. Problem Statement
+
+Searching for employment opportunities is a repetitive and fragmented process that typically requires users to:
+
+* Search multiple job boards
+* Read lengthy job descriptions
+* Determine role compatibility
+* Avoid duplicate listings
+* Track application progress
+* Remember follow-up actions
+
+These activities require significant time and cognitive effort and are well-suited for automation and AI-assisted decision support.
+
+---
+
+# 3. Goals
+
+The system shall:
+
+1. Automatically collect job postings from approved sources.
+2. Normalize job data into a consistent structure.
+3. Prevent duplicate job entries.
+4. Evaluate jobs against user-defined preferences using AI.
+5. Deliver recommendations through Telegram notifications.
+6. Maintain application status tracking.
+7. Persist all job information and decisions within a database.
+8. Minimize manual effort during the job search process.
+
+---
+
+# 4. Non-Goals (Version 1)
+
+The following capabilities are intentionally excluded from Version 1:
+
+* Automatic job applications
+* Resume generation
+* Cover letter generation
+* Browser automation and scraping
+* LinkedIn authentication
+* Resume tailoring
+* Web dashboards
+* Machine learning feedback loops
+* Automatic interview preparation
+* Company research summaries
+
+These capabilities may be considered in future versions.
+
+---
+
+# 5. Technology Stack
+
+## Workflow Orchestration
+
+n8n
+
+## Database
+
+PostgreSQL
+
+## AI Evaluation Engine
+
+Ollama
+
+## Notifications
+
+Telegram Bot API
+
+## Hosting Environment
+
+Docker
+CasaOS
+
+## Source Control
+
+GitHub
+
+---
+
+# 6. System Architecture
+
+Job Sources
+↓
+Job Collection
+↓
+Normalization
+↓
+Deduplication
+↓
+PostgreSQL
+↓
+AI Evaluation
+↓
+PostgreSQL
+↓
+Telegram Notifications
+↓
+Application Tracking
+
+---
+
+# 7. Supported Job Sources
+
+## Version 1 Sources
+
+* Remote OK API
+* Indeed RSS feeds
+* Company career RSS feeds (optional)
+
+## Future Sources
+
+* LinkedIn
+* Built In
+* Wellfound
+* Additional public APIs
+
+---
+
+# 8. Functional Requirements
+
+## FR-001: Job Collection
+
+The system shall:
+
+* Execute on a scheduled basis every four hours.
+* Retrieve jobs from approved public sources.
+* Retrieve complete job descriptions whenever available.
+* Capture metadata associated with each posting.
+
+---
+
+## FR-002: Job Normalization
+
+The system shall normalize all job postings into the following structure:
+
+* Title
+* Company
+* Location
+* Salary
+* Description
+* Source
+* URL
+* Date Posted
+* Date Found
+
+All downstream processing shall operate exclusively on this normalized structure.
+
+---
+
+## FR-003: Deduplication
+
+The system shall generate a fingerprint using:
+
+* Company
+* Job Title
+* Location
+
+Hash generation:
+
+MD5(
+lower(company) +
+lower(title) +
+lower(location)
+)
+
+If the fingerprint already exists, the job shall not be inserted.
+
+---
+
+## FR-004: Job Persistence
+
+The system shall persist:
+
+* Original job information
+* AI evaluations
+* Application status
+* User notes
+* Timestamps
+
+All information shall remain available for future review and analysis.
+
+---
+
+## FR-005: AI Evaluation
+
+The system shall evaluate jobs using complete job descriptions and user preference data.
+
+The AI evaluation shall return:
+
+* Match Score (0-100)
+* Recommendation
+* Reasons
+* Red Flags
+* Role Categories
+* AI Summary
+
+Valid recommendations:
+
+* Apply
+* Review
+* Ignore
+
+---
+
+## FR-006: Immediate Notifications
+
+The system shall send Telegram notifications when:
+
+Match Score >= 90
+
+Notifications shall include:
+
+* Job Title
+* Company
+* Location
+* Match Score
+* Recommendation
+* Reasons
+* Red Flags
+* Job URL
+
+---
+
+## FR-007: Daily Digest
+
+The system shall generate a daily digest containing:
+
+80 <= Match Score < 90
+
+The digest shall include:
+
+* Total jobs identified
+* Number of recommended opportunities
+* Summary information for each recommended position
+
+---
+
+## FR-008: Application Tracking
+
+The system shall support the following statuses:
+
+* New
+* Saved
+* Applied
+* Interviewing
+* Rejected
+* Closed
+* Ignored
+
+Status changes shall persist within the database.
+
+---
+
+# 9. User Preference Requirements
+
+User preferences shall be stored as data and shall not be hardcoded within workflows.
+
+Initial preferences:
+
+Experience:
+20+ years in technology
+
+Preferred Roles:
+
+* Automation & Process Improvement Specialist
+* Workflow Automation Specialist
+* Business Systems Specialist
+
+Enjoys:
+
+* Building AI automations
+* Business process improvement
+* Dashboard development
+* Documentation and training
+
+Avoid:
+
+* SQL-heavy positions
+* Analyst positions
+
+Location Preferences:
+
+* Remote preferred
+* Hybrid acceptable
+
+---
+
+# 10. Data Requirements
+
+## Job Data
+
+Each job record shall include:
+
+* Unique Identifier
+* Hash
+* Title
+* Company
+* Location
+* Salary
+* Description
+* Source
+* URL
+* Date Posted
+* Date Found
+* Score
+* Recommendation
+* Reasons
+* Red Flags
+* Role Categories
+* AI Summary
+* Status
+* Date Applied
+* Notes
+
+---
+
+## User Profile Data
+
+The system shall maintain configurable user preferences including:
+
+* Years of experience
+* Preferred roles
+* Interests
+* Avoided roles
+* Location preferences
+
+---
+
+# 11. Workflow Definitions
+
+## Workflow 1: Job Collection
+
+Responsibilities:
+
+* Retrieve jobs
+* Normalize data
+* Generate fingerprints
+* Insert new jobs
+
+Schedule:
+
+Every four hours
+
+---
+
+## Workflow 2: AI Evaluation
+
+Responsibilities:
+
+* Retrieve unscored jobs
+* Retrieve user preferences
+* Evaluate jobs with Ollama
+* Persist evaluation results
+
+---
+
+## Workflow 3: Immediate Notifications
+
+Responsibilities:
+
+* Retrieve high-scoring jobs
+* Generate Telegram messages
+* Deliver notifications
+* Record notification delivery
+
+---
+
+## Workflow 4: Daily Digest
+
+Responsibilities:
+
+* Retrieve secondary recommendations
+* Build summary report
+* Deliver digest
+
+Schedule:
+
+7:00 PM daily
+
+---
+
+## Workflow 5: Application Management
+
+Responsibilities:
+
+* Maintain status
+* Update notes
+* Record application dates
+* Track outcomes
+
+---
+
+# 12. Success Criteria
+
+Version 1 is considered complete when the following sequence executes successfully without manual intervention:
+
+Job Collection
+→ Normalization
+→ Deduplication
+→ Database Storage
+→ AI Evaluation
+→ Notification Delivery
+→ Application Tracking
+
+The only required user actions shall be:
+
+* Reviewing opportunities
+* Applying to positions
+* Updating application statuses
+
+---
+
+# 13. Assumptions and Constraints
+
+Assumptions:
+
+* Public job sources remain available.
+* Ollama is operational locally.
+* PostgreSQL is available.
+* Telegram bot access is configured.
+* Docker and CasaOS remain operational.
+
+Constraints:
+
+* No paid services.
+* Self-hosted architecture.
+* No browser automation.
+* No dependency on proprietary AI services.
+* Minimal ongoing maintenance requirements.
+
+---
+
+# 14. Future Enhancements
+
+Potential Version 2 capabilities:
+
+* Additional job sources
+* Dashboarding and analytics
+* Resume generation
+* Cover letter generation
+* Feedback learning loop
+* Skill trend reporting
+* Company research summaries
+* Interview preparation assistance
+* Application reminders
+* Resume-job matching analysis
