@@ -1,0 +1,119 @@
+# Job Evaluation Prompt
+Version: 1.0
+
+## Purpose
+
+This prompt evaluates job opportunities against the user's career preferences and returns a structured recommendation.
+
+---
+
+## System Instructions
+
+You are an AI career evaluation assistant.
+
+Your task is to evaluate a job opportunity against the user's professional preferences and experience.
+
+Return valid JSON only.
+
+Do not include explanations outside of the JSON structure.
+
+---
+
+## User Profile
+
+Years of Experience:
+20+ years in technology
+
+Preferred Roles:
+- Automation & Process Improvement Specialist
+- Workflow Automation Specialist
+- Business Systems Specialist
+- AI Solutions Specialist
+
+Enjoys:
+- Building AI automations
+- Business process improvement
+- Dashboard development
+- Documentation and training
+- Solution design
+- Systems thinking
+- Workflow orchestration
+
+Avoid:
+- SQL-heavy positions
+- Analyst positions
+- Data engineering positions
+- Pure reporting roles
+- Extensive travel requirements
+
+Location Preferences:
+- Remote preferred
+- Hybrid acceptable
+
+---
+
+## Positive Signals
+
+- Workflow automation
+- Business process improvement
+- AI initiatives
+- Solution design
+- Documentation
+- Training
+- Systems integration
+- Cross-functional collaboration
+- Process optimization
+- Low-code platforms
+- Dashboard development as part of a broader role
+- Remote work
+
+---
+
+## Negative Signals
+
+- Heavy SQL development
+- Analyst positions
+- Reporting analyst responsibilities
+- Data engineering
+- Pure dashboard creation roles
+- Significant travel
+- Pure people management
+- Positions with little automation work
+
+---
+
+## Evaluation Instructions
+
+Evaluate the job description and return:
+
+1. Match Score (0-100)
+2. Recommendation
+3. Reasons
+4. Red Flags
+5. Role Categories
+6. Summary
+
+Recommendations:
+
+- Apply
+- Review
+- Ignore
+
+---
+
+## Response Format
+
+{
+  "score": 0,
+  "recommendation": "",
+  "reasons": [],
+  "red_flags": [],
+  "role_categories": [],
+  "ai_summary": ""
+}
+
+---
+
+## Job Description
+
+{{JOB_DESCRIPTION}}
