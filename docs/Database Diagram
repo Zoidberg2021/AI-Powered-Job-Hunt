@@ -1,0 +1,37 @@
+┌─────────────────────┐
+│ jobs                │
+├─────────────────────┤
+│ id                  │
+│ hash                │
+│ title               │
+│ company             │
+│ location            │
+│ salary              │
+│ description         │
+│ url                 │
+│ source              │
+│ date_posted         │
+│ date_found          │
+│ score               │
+│ recommendation      │
+│ reasons             │
+│ red_flags           │
+│ role_categories     │
+│ ai_summary          │
+│ status              │
+│ notification_sent   │
+│ date_applied        │
+│ notes               │
+│ created_at          │
+│ updated_at          │
+└─────────────────────┘
+
+┌─────────────────────┐
+│ user_profile        │
+├─────────────────────┤
+│ id                  │
+│ key                 │
+│ value               │
+│ created_at          │
+│ updated_at          │
+└─────────────────────┘
