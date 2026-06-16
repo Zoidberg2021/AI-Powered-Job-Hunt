@@ -1,0 +1,32 @@
+Schedule Trigger
+       │
+       ▼
+Retrieve Jobs
+       │
+       ▼
+Normalize Data
+       │
+       ▼
+Generate Hash
+       │
+       ▼
+Duplicate?
+ ┌─────┴─────┐
+ │           │
+Yes         No
+ │           │
+Skip      Insert Job
+              │
+              ▼
+       AI Evaluation
+              │
+              ▼
+       Match Score
+              │
+     ┌────────┼────────┐
+     │        │        │
+     ▼        ▼        ▼
+ ≥90      80-89      <80
+     │        │        │
+Immediate  Digest   Database
+Telegram   Only       Only
